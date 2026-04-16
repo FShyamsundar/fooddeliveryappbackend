@@ -18,6 +18,12 @@ export const createReview = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
+    if (orderDoc.restaurant.toString() !== restaurant) {
+      return res
+        .status(400)
+        .json({ message: "Order does not belong to this restaurant" });
+    }
+
     const review = await Review.create({
       user: req.user._id,
       restaurant,

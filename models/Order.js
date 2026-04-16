@@ -32,6 +32,7 @@ const orderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
+        "pending_payment",
         "placed",
         "preparing",
         "out_for_delivery",

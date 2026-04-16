@@ -62,12 +62,14 @@ export const confirmPayment = async (req, res) => {
 
     if (razorpaySignature === expectedSign) {
       order.paymentStatus = "completed";
+      order.status = "placed";
       order.razorpayPaymentId = razorpayPaymentId;
       order.razorpaySignature = razorpaySignature;
       await order.save();
       res.json({ message: "Payment successful", order });
     } else {
       order.paymentStatus = "failed";
+      order.status = "cancelled";
       await order.save();
       res.status(400).json({ message: "Payment verification failed" });
     }

@@ -46,8 +46,9 @@ export const createOrder = async (req, res) => {
       deliveryType,
       scheduledTime,
       paymentMethod,
-      paymentStatus:
-        paymentMethod === "cash_on_delivery" ? "pending" : "pending",
+      status:
+        paymentMethod === "cash_on_delivery" ? "placed" : "pending_payment",
+      paymentStatus: "pending",
       subtotal,
       deliveryFee,
       tax,
@@ -66,7 +67,10 @@ export const createOrder = async (req, res) => {
 
 export const getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id })
+    const orders = await Order.find({
+      user: req.user._id,
+      status: { $ne: "pending_payment" },
+    })
       .populate("restaurant")
       .sort("-createdAt");
     res.json(orders);
