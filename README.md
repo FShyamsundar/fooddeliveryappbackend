@@ -103,6 +103,22 @@ The server will start on `http://localhost:5000` with hot reloading enabled.
 
 - `POST /create-payment-intent` - Create Razorpay order for checkout
 
+### Razorpay Test Payment Details
+
+When testing payments in Razorpay sandbox/test mode, use dummy card details. Do not use these details in production.
+
+- Card number: `4111 1111 1111 1111`
+- Expiry month/year: `12 / 25`
+- CVV: `123`
+
+Alternative Razorpay test card:
+
+- Card number: `4000 0000 0000 3220`
+- Expiry month/year: `12 / 25`
+- CVV: `123`
+
+> Use these only in Razorpay test/sandbox mode. Real card details are required for production transactions.
+
 ### Review Routes (`/api/reviews`)
 
 - `POST /` - Submit restaurant review
