@@ -6,6 +6,20 @@ export const createReview = async (req, res) => {
   try {
     const { restaurant, order, rating, comment } = req.body;
 
+    if (!restaurant || !order || !rating || !comment || !comment.trim()) {
+      return res.status(400).json({ message: "Complete all review fields." });
+    }
+    if (rating < 1 || rating > 5) {
+      return res
+        .status(400)
+        .json({ message: "Rating must be between 1 and 5." });
+    }
+    if (comment.trim().length < 10) {
+      return res
+        .status(400)
+        .json({ message: "Review text must be at least 10 characters." });
+    }
+
     const existingReview = await Review.findOne({ user: req.user._id, order });
     if (existingReview) {
       return res
@@ -24,12 +38,18 @@ export const createReview = async (req, res) => {
         .json({ message: "Order does not belong to this restaurant" });
     }
 
+    if (orderDoc.status !== "delivered") {
+      return res
+        .status(400)
+        .json({ message: "Reviews can only be posted for delivered orders." });
+    }
+
     const review = await Review.create({
       user: req.user._id,
       restaurant,
       order,
       rating,
-      comment,
+      comment: comment.trim(),
     });
 
     const reviews = await Review.find({ restaurant, isApproved: true });
@@ -96,8 +116,12 @@ export const replyToReview = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
+    if (!req.body.reply || !req.body.reply.trim()) {
+      return res.status(400).json({ message: "Reply cannot be empty." });
+    }
+
     review.reply = {
-      text: req.body.reply,
+      text: req.body.reply.trim(),
       date: new Date(),
     };
     await review.save();
