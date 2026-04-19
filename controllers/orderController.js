@@ -1,5 +1,6 @@
 import Order from "../models/Order.js";
 import Restaurant from "../models/Restaurant.js";
+import { sendOrderUpdateNotification } from "./notificationController.js";
 
 export const createOrder = async (req, res) => {
   try {
@@ -117,11 +118,18 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
+    const oldStatus = order.status;
     order.status = req.body.status;
     if (req.body.status === "delivered") {
       order.actualDeliveryTime = new Date();
     }
     await order.save();
+
+    // Send notification if status changed
+    if (oldStatus !== req.body.status) {
+      await sendOrderUpdateNotification(order._id, req.body.status);
+    }
+
     res.json(order);
   } catch (error) {
     res.status(500).json({ message: error.message });

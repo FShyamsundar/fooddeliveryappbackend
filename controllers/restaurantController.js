@@ -1,5 +1,7 @@
 import Restaurant from "../models/Restaurant.js";
 import MenuItem from "../models/MenuItem.js";
+import { upload } from "../utils/helpers.js";
+import { sendNewRestaurantNotification } from "./notificationController.js";
 
 export const createRestaurant = async (req, res) => {
   try {
@@ -7,6 +9,10 @@ export const createRestaurant = async (req, res) => {
       ...req.body,
       owner: req.user._id,
     });
+
+    // Send notification to all users about new restaurant
+    await sendNewRestaurantNotification(restaurant._id);
+
     res.status(201).json(restaurant);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -98,6 +104,60 @@ export const deleteRestaurant = async (req, res) => {
     }
     await restaurant.deleteOne();
     res.json({ message: "Restaurant deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const uploadRestaurantImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const restaurant = await Restaurant.findById(req.params.id);
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+    if (
+      restaurant.owner.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const imageUrl = `/uploads/${req.file.filename}`;
+    restaurant.images.push(imageUrl);
+    await restaurant.save();
+
+    res.json({ imageUrl, message: "Image uploaded successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteRestaurantImage = async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.id);
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+    if (
+      restaurant.owner.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const imageIndex = restaurant.images.indexOf(req.body.imageUrl);
+    if (imageIndex === -1) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    restaurant.images.splice(imageIndex, 1);
+    await restaurant.save();
+
+    res.json({ message: "Image deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
